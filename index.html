@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Валидатор документов CRM 2.0</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            padding: 2rem;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 2rem;
+        }
+
+        .header-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            color: #2563eb;
+        }
+
+        .header h1 {
+            font-size: 1.875rem;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .header p {
+            color: #4b5563;
+            margin-top: 0.25rem;
+        }
+
+        .form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        input[type="text"],
+        input[type="tel"] {
+            padding: 0.75rem 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .help-text {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .section-desc {
+            font-size: 0.875rem;
+            color: #4b5563;
+            margin-bottom: 1rem;
+        }
+
+        .document-item {
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            transition: border-color 0.2s, background-color 0.2s;
+        }
+
+        .document-item:hover {
+            border-color: #93c5fd;
+        }
+
+        .document-item.missing {
+            border-color: #ef4444;
+            background-color: #fef2f2;
+        }
+
+        .document-item.missing .document-name {
+            color: #dc2626;
+        }
+
+        .missing-badge {
+            display: inline-block;
+            background-color: #ef4444;
+            color: white;
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+
+        .document-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .document-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .status-icon {
+            width: 1.25rem;
+            height: 1.25rem;
+        }
+
+        .status-icon.pending {
+            color: #d1d5db;
+        }
+
+        .status-icon.success {
+            color: #22c55e;
+        }
+
+        .document-name {
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .required {
+            color: #ef4444;
+            font-size: 0.875rem;
+        }
+
+        .file-input {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        .file-input::-webkit-file-upload-button {
+            margin-right: 1rem;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            border: none;
+            font-size: 0.875rem;
+            font-weight: 600;
+            background-color: #eff6ff;
+            color: #2563eb;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .file-input::-webkit-file-upload-button:hover {
+            background-color: #dbeafe;
+        }
+
+        .file-info {
+            font-size: 0.75rem;
+            color: #16a34a;
+            margin-top: 0.5rem;
+            margin-left: 2rem;
+        }
+
+        .validation-results {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .validation-results.success {
+            background-color: #f0fdf4;
+            border: 1px solid #bbf7d0;
+        }
+
+        .validation-results.error {
+            background-color: #fef2f2;
+            border: 1px solid #fecaca;
+        }
+
+        .validation-title {
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .validation-title.success {
+            color: #16a34a;
+        }
+
+        .validation-title.error {
+            color: #dc2626;
+        }
+
+        .validation-item {
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .validation-item.error {
+            color: #b91c1c;
+        }
+
+        .validation-item.success {
+            color: #15803d;
+        }
+
+        .validation-item.warning {
+            color: #c2410c;
+        }
+
+        .validation-list {
+            list-style: disc;
+            list-style-position: inside;
+            margin-top: 0.25rem;
+        }
+
+        .submit-btn {
+            width: 100%;
+            background-color: #2563eb;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: background-color 0.2s;
+        }
+
+        .submit-btn:hover {
+            background-color: #1d4ed8;
+        }
+
+        .submit-btn:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .spinner {
+            width: 1.25rem;
+            height: 1.25rem;
+            border: 2px solid white;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .info-box {
+            margin-top: 2rem;
+            padding: 1rem;
+            background-color: #eff6ff;
+            border-radius: 0.5rem;
+            border: 1px solid #bfdbfe;
+        }
+
+        .info-box h3 {
+            font-weight: 600;
+            color: #1e40af;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-box ul {
+            font-size: 0.875rem;
+            color: #1e3a8a;
+            list-style: none;
+        }
+
+        .info-box li {
+            margin-bottom: 0.25rem;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <svg class="header-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <div>
+                    <h1>Валидатор документов CRM 2.0</h1>
+                    <p>Казактелеком - Абонентский отдел</p>
+                </div>
+            </div>
+
+            <form class="form" id="validationForm">
+                <div class="grid">
+                    <div class="form-group">
+                        <label for="lastName">Фамилия</label>
+                        <input type="text" id="lastName" placeholder="Введите фамилию" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="firstName">Имя</label>
+                        <input type="text" id="firstName" placeholder="Введите имя" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="middleName">Отчество</label>
+                        <input type="text" id="middleName" placeholder="Введите отчество">
+                    </div>
+                    <div class="form-group">
+                        <label for="subscriberPhone">Номер телефона абонента</label>
+                        <input type="tel" id="subscriberPhone" placeholder="+7 (___) ___-__-__" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="smsCode">SMS код подписи</label>
+                        <input type="text" id="smsCode" placeholder="6-значный код" maxlength="6" required>
+                        <p class="help-text">Код отправлен на номер абонента</p>
+                    </div>
+                </div>
+
+                <div>
+                    <h2 class="section-title">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                        </svg>
+                        Загрузка документов
+                    </h2>
+                    <p class="section-desc">Все документы обязательны. Допустимые форматы: PDF, JPG</p>
+
+                    <div id="documentsList">
+                        <!-- Documents will be inserted here -->
+                    </div>
+                </div>
+
+                <div id="validationResults" class="validation-results hidden">
+                    <!-- Validation results will be inserted here -->
+                </div>
+
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Проверить документы
+                </button>
+            </form>
+
+            <div class="info-box">
+                <h3>Информация</h3>
+                <ul>
+                    <li>• Все 5 документов обязательны для каждого абонента</li>
+                    <li>• Допустимые форматы: PDF, JPG (макс. 10MB)</li>
+                    <li>• Подпись верифицируется через SMS код</li>
+                    <li>• После проверки документы будут готовы для загрузки в CRM 2.0</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const REQUIRED_DOCUMENTS = [
+            { id: 'order', name: 'Бланк заказа', required: true },
+            { id: 'refusal', name: 'Заявление отказ от услуг', required: true },
+            { id: 'power_of_attorney', name: 'Доверенность', required: true },
+            { id: 'id_document', name: 'Удостоверение личности', required: true },
+            { id: 'title_documents', name: 'Правоустанавливающие документы', required: true },
+        ];
+
+        const ALLOWED_FORMATS = ['application/pdf', 'image/jpeg', 'image/jpg'];
+        const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
+        let documents = {};
+
+        // Initialize documents list
+        function initDocumentsList() {
+            const container = document.getElementById('documentsList');
+            container.innerHTML = REQUIRED_DOCUMENTS.map(doc => `
+                <div class="document-item" data-doc-id="${doc.id}">
+                    <div class="document-header">
+                        <div class="document-info">
+                            <svg class="status-icon pending" id="status-${doc.id}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <span class="document-name">${doc.name}</span>
+                            ${doc.required ? '<span class="required">*</span>' : ''}
+                        </div>
+                        <input type="file" accept=".pdf,.jpg,.jpeg" class="file-input" data-doc-id="${doc.id}" onchange="handleFileUpload('${doc.id}', this)">
+                    </div>
+                    <div id="file-info-${doc.id}" class="file-info"></div>
+                </div>
+            `).join('');
+        }
+
+        function handleFileUpload(docId, input) {
+            const file = input.files[0];
+            if (!file) {
+                updateMissingStatus(docId, true);
+                return;
+            }
+
+            if (!ALLOWED_FORMATS.includes(file.type)) {
+                alert('Допустимые форматы: PDF, JPG');
+                input.value = '';
+                updateMissingStatus(docId, true);
+                return;
+            }
+
+            if (file.size > MAX_FILE_SIZE) {
+                alert('Размер файла не должен превышать 10MB');
+                input.value = '';
+                updateMissingStatus(docId, true);
+                return;
+            }
+
+            documents[docId] = file;
+
+            // Update UI
+            const statusIcon = document.getElementById(`status-${docId}`);
+            statusIcon.classList.remove('pending');
+            statusIcon.classList.add('success');
+            statusIcon.setAttribute('fill', 'currentColor');
+
+            const fileInfo = document.getElementById(`file-info-${docId}`);
+            fileInfo.textContent = `Загружен: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+
+            updateMissingStatus(docId, false);
+        }
+
+        function updateMissingStatus(docId, isMissing) {
+            const docItem = document.querySelector(`.document-item[data-doc-id="${docId}"]`);
+            const docName = docItem.querySelector('.document-name');
+            
+            // Remove existing badge
+            const existingBadge = docItem.querySelector('.missing-badge');
+            if (existingBadge) {
+                existingBadge.remove();
+            }
+
+            if (isMissing) {
+                docItem.classList.add('missing');
+                const badge = document.createElement('span');
+                badge.className = 'missing-badge';
+                badge.textContent = 'Нет файла';
+                docName.appendChild(badge);
+            } else {
+                docItem.classList.remove('missing');
+            }
+        }
+
+        function highlightMissingFiles() {
+            REQUIRED_DOCUMENTS.forEach(doc => {
+                if (!documents[doc.id]) {
+                    updateMissingStatus(doc.id, true);
+                }
+            });
+        }
+
+        function validateDocuments() {
+            const results = {
+                allDocumentsPresent: true,
+                missingDocuments: [],
+                fileQualityIssues: [],
+                smsCodeValid: false,
+                fioValid: false
+            };
+
+            // Check all required documents
+            REQUIRED_DOCUMENTS.forEach(doc => {
+                if (!documents[doc.id]) {
+                    results.allDocumentsPresent = false;
+                    results.missingDocuments.push(doc.name);
+                }
+            });
+
+            // Validate SMS code
+            const smsCode = document.getElementById('smsCode').value;
+            results.smsCodeValid = smsCode.length === 6 && /^\d+$/.test(smsCode);
+
+            // Validate FIO fields
+            const lastName = document.getElementById('lastName').value.trim();
+            const firstName = document.getElementById('firstName').value.trim();
+            results.fioValid = lastName.length > 0 && firstName.length > 0;
+
+            return results;
+        }
+
+        function displayValidationResults(results) {
+            const container = document.getElementById('validationResults');
+            container.classList.remove('hidden', 'success', 'error');
+
+            const hasErrors = !results.allDocumentsPresent || !results.smsCodeValid || !results.fioValid || results.fileQualityIssues.length > 0;
+            container.classList.add(hasErrors ? 'error' : 'success');
+
+            let html = `
+                <div class="validation-title ${hasErrors ? 'error' : 'success'}">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        ${hasErrors 
+                            ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>'
+                            : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>'
+                        }
+                    </svg>
+                    Результаты проверки
+                </div>
+            `;
+
+            if (results.missingDocuments.length > 0) {
+                html += `
+                    <div class="validation-item error">
+                        <strong>Отсутствуют документы:</strong>
+                        <ul class="validation-list">
+                            ${results.missingDocuments.map(doc => `<li>${doc}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+
+            if (!results.smsCodeValid) {
+                html += `
+                    <div class="validation-item error">
+                        <strong>SMS код:</strong> Неверный формат кода (должен быть 6 цифр)
+                    </div>
+                `;
+            }
+
+            if (!results.fioValid) {
+                html += `
+                    <div class="validation-item error">
+                        <strong>ФИО:</strong> Необходимо указать фамилию и имя
+                    </div>
+                `;
+            }
+
+            if (results.fileQualityIssues.length > 0) {
+                html += `
+                    <div class="validation-item warning">
+                        <strong>Проблемы с качеством файлов:</strong>
+                        <ul class="validation-list">
+                            ${results.fileQualityIssues.map(issue => `<li>${issue.issue}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+
+            if (results.allDocumentsPresent && results.smsCodeValid && results.fioValid && results.fileQualityIssues.length === 0) {
+                html += `
+                    <div class="validation-item success">
+                        Все документы загружены корректно, SMS код верифицирован, ФИО указано
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        document.getElementById('validationForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `
+                <div class="spinner"></div>
+                Проверка...
+            `;
+
+            const results = validateDocuments();
+            displayValidationResults(results);
+
+            if (results.allDocumentsPresent && results.smsCodeValid && results.fioValid && results.fileQualityIssues.length === 0) {
+                // Simulate CRM integration
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                alert('Документы успешно проверены и готовы для загрузки в CRM 2.0!');
+            }
+
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = `
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                Проверить документы
+            `;
+        });
+
+        // Initialize
+        initDocumentsList();
+        highlightMissingFiles();
+    </script>
+</body>
+</html>
